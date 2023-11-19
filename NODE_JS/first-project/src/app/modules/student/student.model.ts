@@ -1,29 +1,45 @@
 import { Schema, model } from 'mongoose';
+import validator from 'validator';
 import {
-  Guardian,
-  LocalGourdian,
-  StudentType,
-  UserName,
+  TGuardian,
+  TLocalGourdian,
+  StudentMethod,
+  StudentModel,
+  TStudentType,
+  TUserName,
 } from './student.interface';
 
-const userNameSchema = new Schema<UserName>({
+const userNameSchema = new Schema<TUserName>({
   firstName: {
     type: String,
     required: true,
+    trim: true,
+    validate: {
+      validator: function (value: string) {
+        const firstNameStr =
+          value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+
+        return value === firstNameStr;
+      },
+      message: '{VALUE} is not capitalized',
+    },
   },
   middleName: {
     type: String,
+    trim: true,
   },
   lastName: {
     type: String,
     required: true,
+    trim: true,
   },
 });
 
-const guardianSchema = new Schema<Guardian>({
+const guardianSchema = new Schema<TGuardian>({
   fatherName: {
     type: String,
     required: true,
+    trim: true,
   },
   fatherOccupation: {
     type: String,
@@ -36,6 +52,7 @@ const guardianSchema = new Schema<Guardian>({
   motherName: {
     type: String,
     required: true,
+    trim: true,
   },
   motherOccupation: {
     type: String,
@@ -47,10 +64,11 @@ const guardianSchema = new Schema<Guardian>({
   },
 });
 
-const localGourdianSchema = new Schema<LocalGourdian>({
+const localGourdianSchema = new Schema<TLocalGourdian>({
   name: {
     type: String,
     required: true,
+    trim: true,
   },
   occupation: {
     type: String,
@@ -66,25 +84,66 @@ const localGourdianSchema = new Schema<LocalGourdian>({
   },
 });
 
-const studentSchema = new Schema<StudentType>({
+// |   main schema start here
+const studentSchema = new Schema<TStudentType, StudentModel, StudentMethod>({
   id: { type: String },
-  name: userNameSchema,
-  gender: ['male', 'female'],
+  name: {
+    type: userNameSchema,
+    required: true,
+  },
+  gender: {
+    type: String,
+    enum: {
+      values: ['male', 'female', 'other'],
+      message: '{VALUE} is not valid ',
+    },
+  },
   dateOfBirth: { type: String },
-  email: { type: String, required: true },
+  email: {
+    type: String,
+    validate: {
+      validator: (value: string) => validator.isEmail(value),
+    },
+    required: true,
+  },
   contactNo: { type: String, required: true },
   emergencyContactNo: { type: String, required: true },
-  bloodGroup: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+  bloodGroup: {
+    type: String,
+    enum: {
+      values: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+      message: '{VALUE} is not a valid Blood Group!',
+    },
+    required: [true, 'please provide the bloodGroup'],
+  },
   presentAddress: { type: String, required: true },
   permanentAddress: { type: String, required: true },
-  guardian: guardianSchema,
-  localGourdian: localGourdianSchema,
+  guardian: {
+    type: guardianSchema,
+    required: true,
+  },
+  localGuardian: {
+    type: localGourdianSchema,
+    required: true,
+  },
   profileImg: {
     type: String,
   },
-  isActive: ['active', 'blocked'],
+  isActive: {
+    type: String,
+    enum: ['active', 'blocked'],
+    default: 'active',
+  },
 });
 
-const Student = model<StudentType>('Student', studentSchema);
+studentSchema.methods.isUserExists = async function (id: string) {
+  const existingUser = await Student.findOne({ id });
+
+  return existingUser;
+};
+
+const Student = model<TStudentType, StudentModel>('Student', studentSchema);
 
 export default Student;
+
+// | joi validation active

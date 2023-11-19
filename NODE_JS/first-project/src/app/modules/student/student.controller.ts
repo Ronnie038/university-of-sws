@@ -1,8 +1,20 @@
 import { Request, Response } from 'express';
 import { StudentServices } from './student.service';
+// import studentValidationZodSchema from './student.zod.validation';
+// import studentValidationSchema from './student.validation';
 
 const createStudent = async (req: Request, res: Response) => {
   try {
+    // creating chema validation withing joi
+
+    //* validating data using joi validator
+    // const { error, value } = studentValidationSchema.validate(req.body);
+    // *----------====--------
+
+    // * validating data using zod validatior
+    // const parseZodData = studentValidationZodSchema.parse(req.body);
+    // *----------====--------
+
     const student = req.body;
 
     const result = await StudentServices.createStudentIntoDB(student);
@@ -12,10 +24,12 @@ const createStudent = async (req: Request, res: Response) => {
       message: 'student is created succesfully',
       data: result,
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.log(error);
     res.status(500).json({
       success: false,
-      message: 'student could not created',
+      message: error.message || 'student could not created',
+      error,
     });
   }
 };
