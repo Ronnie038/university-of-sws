@@ -24,6 +24,7 @@ export type TLocalGourdian = {
 
 export interface TStudentType {
   id: string;
+  password: string;
   name: TUserName;
   gender: 'male' | 'female' | 'other';
   dateOfBirth?: string;
@@ -37,14 +38,21 @@ export interface TStudentType {
   guardian: TGuardian;
   localGuardian: TLocalGourdian;
   isActive: 'active' | 'blocked';
+  isDeleted: boolean;
 }
 
-export type StudentMethod = {
+// * for creating static method
+export interface StudentModel extends Model<TStudentType> {
   isUserExists(id: string): Promise<TStudentType | null>;
-};
+}
 
-export type StudentModel = Model<
-  TStudentType,
-  Record<string, never>,
-  StudentMethod
->;
+// * for creating instance method
+// export type StudentMethod = {
+//   isUserExists(id: string): Promise<TStudentType | null>;
+// };
+
+// export type StudentModel = Model<
+//   TStudentType,
+//   Record<string, never>,
+//   StudentMethod
+// >;

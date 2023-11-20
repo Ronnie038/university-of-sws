@@ -1,13 +1,16 @@
 import { Schema, model } from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
 import {
   TGuardian,
   TLocalGourdian,
-  StudentMethod,
+  // StudentMethod,
   StudentModel,
   TStudentType,
   TUserName,
 } from './student.interface';
+import config from '../../config';
+// import { number } from 'joi';
 
 const userNameSchema = new Schema<TUserName>({
   firstName: {
@@ -85,8 +88,9 @@ const localGourdianSchema = new Schema<TLocalGourdian>({
 });
 
 // |   main schema start here
-const studentSchema = new Schema<TStudentType, StudentModel, StudentMethod>({
+const studentSchema = new Schema<TStudentType, StudentModel>({
   id: { type: String },
+  password: String,
   name: {
     type: userNameSchema,
     required: true,
@@ -134,13 +138,67 @@ const studentSchema = new Schema<TStudentType, StudentModel, StudentMethod>({
     enum: ['active', 'blocked'],
     default: 'active',
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-studentSchema.methods.isUserExists = async function (id: string) {
+// * pre save meddleware/ hook : will work on careate() or save()
+
+studentSchema.pre('save', async function (next) {
+  const password = this.password;
+  const saltRounds = Number(config.bcrypt_salt_rounds);
+
+  const salt = await bcrypt.genSalt(saltRounds);
+
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  this.password = hashedPassword;
+  next();
+});
+
+// * post save meddleware/ hook
+studentSchema.post('save', function (data, next) {
+  data.password = '';
+
+  next();
+});
+
+// * creating a custom method
+
+studentSchema.statics.isUserExists = async function (id: string) {
   const existingUser = await Student.findOne({ id });
 
   return existingUser;
 };
+
+//|Query middleware
+studentSchema.pre('find', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+
+  next();
+});
+studentSchema.pre('findOne', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+
+  next();
+});
+studentSchema.pre('aggregate', function (next) {
+  // this.({ isDeleted: { $ne: true } });
+  // * visualization of this pipeline logic
+  //  [{$match:{isDeleted:{$ne:true}}},{$match:{id:'123456'}}]
+
+  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
+  next();
+});
+
+// *creating a custom instacnce method
+// studentSchema.methods.isUserExists = async function (id: string) {
+//   const existingUser = await Student.findOne({ id });
+
+//   return existingUser;
+// };
 
 const Student = model<TStudentType, StudentModel>('Student', studentSchema);
 
