@@ -37,12 +37,14 @@ export interface TStudentType {
   permanentAddress: string;
   guardian: TGuardian;
   localGuardian: TLocalGourdian;
+  admissionSemester: Types.ObjectId;
 
   isDeleted: boolean;
 }
 
 // * for creating static method
 export interface StudentModel extends Model<TStudentType> {
+  // eslint-disable-next-line no-unused-vars
   isUserExists(id: string): Promise<TStudentType | null>;
 }
 

@@ -14,7 +14,6 @@ const globalErrorHandler = (
   const statusCode = 500;
   const message = 'Something went wrong';
 
-  console.log(req.body);
   // handling error if error comes from data validation
   if (err instanceof ZodError) {
     return res.status(httpStatus.FORBIDDEN).json({

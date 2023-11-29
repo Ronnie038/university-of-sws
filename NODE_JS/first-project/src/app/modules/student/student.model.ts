@@ -129,6 +129,7 @@ const studentSchema = new Schema<TStudentType, StudentModel>(
         validator: (value: string) => validator.isEmail(value),
       },
       required: true,
+      unique: true,
     },
 
     contactNo: { type: String, required: true },
@@ -157,6 +158,10 @@ const studentSchema = new Schema<TStudentType, StudentModel>(
     },
     profileImg: {
       type: String,
+    },
+    admissionSemester: {
+      type: Schema.Types.ObjectId,
+      ref: 'AcademicSemester',
     },
 
     isDeleted: {

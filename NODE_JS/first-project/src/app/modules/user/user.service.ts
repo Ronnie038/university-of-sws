@@ -4,10 +4,10 @@ import { TUser } from './user.interface';
 import Student from '../student/student.model';
 import User from './user.model';
 
-const createStudentInDb = async (
-  password: string,
-  studentData: TStudentType,
-) => {
+import { AcademicSemester } from '../academicSemister/academicSemester.model';
+import { generatedStudentId } from './user.utils';
+
+const createStudentInDb = async (password: string, payload: TStudentType) => {
   // create a user object
   const userData: Partial<TUser> = {};
   // if password is not given , use default password
@@ -16,8 +16,15 @@ const createStudentInDb = async (
   // set student role
   userData.role = 'student';
 
+  // find academic semester info
+  const admissionSemester = await AcademicSemester.findById(
+    payload.admissionSemester,
+  );
+
   // set manually generated id
-  userData.id = '20300001';
+  if (admissionSemester) {
+    userData.id = await generatedStudentId(admissionSemester);
+  }
 
   // create a userData
   const newUser = await User.create(userData);
@@ -25,10 +32,10 @@ const createStudentInDb = async (
   // create a student
   if (Object.keys(newUser).length) {
     // set id, _id as userData
-    studentData.id = newUser.id;
-    studentData.user = newUser._id; // reference _id
+    payload.id = newUser.id;
+    payload.user = newUser._id; // reference _id
   }
-  const newStudent = await Student.create(studentData);
+  const newStudent = await Student.create(payload);
 
   return newStudent;
 };
