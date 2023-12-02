@@ -38,6 +38,7 @@ export interface TStudentType {
   guardian: TGuardian;
   localGuardian: TLocalGourdian;
   admissionSemester: Types.ObjectId;
+  academicDepartment: Types.ObjectId;
 
   isDeleted: boolean;
 }

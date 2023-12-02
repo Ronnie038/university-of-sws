@@ -11,7 +11,7 @@ const globalErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
-  const statusCode = 500;
+  const statusCode = err.statusCode || 500;
   const message = 'Something went wrong';
 
   // handling error if error comes from data validation
