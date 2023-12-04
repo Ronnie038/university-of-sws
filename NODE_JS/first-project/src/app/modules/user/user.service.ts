@@ -6,11 +6,15 @@ import User from './user.model';
 
 import { AcademicSemester } from '../academicSemister/academicSemester.model';
 import { generatedStudentId } from './user.utils';
-import mongoose from 'mongoose';
+import mongoose, { Error } from 'mongoose';
 import { AppError } from '../../errors/AppError';
 import httpStatus from 'http-status';
 
 const createStudentInDb = async (password: string, payload: TStudentType) => {
+  if (await Student.isUserExists(payload.id, payload.email)) {
+    throw new Error('User already exists with this email');
+  }
+
   // create a user object
   const userData: Partial<TUser> = {};
   // if password is not given , use default password
@@ -49,17 +53,19 @@ const createStudentInDb = async (password: string, payload: TStudentType) => {
     const newStudent = await Student.create([payload], { session });
 
     if (!newStudent.length) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'faild to create student');
+      throw new AppError(httpStatus.BAD_REQUEST, 'faild to create student 111');
     }
 
     await session.commitTransaction();
     await session.endSession();
 
     return newStudent;
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     await session.abortTransaction();
     await session.endSession();
-    throw new AppError(httpStatus.BAD_REQUEST, 'faild to create student');
+
+    throw new Error(error);
   }
 };
 

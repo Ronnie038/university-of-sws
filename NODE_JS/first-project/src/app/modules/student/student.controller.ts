@@ -34,7 +34,7 @@ import catchAsync from '../../utils/cathAsync';
 // };
 
 const getAllStudents: RequestHandler = catchAsync(async (req, res) => {
-  const students = await StudentServices.getAllStudentsFromDB();
+  const students = await StudentServices.getAllStudentsFromDB(req.query);
 
   sendResponse(res, {
     success: true,

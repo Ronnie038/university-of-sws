@@ -187,8 +187,13 @@ const studentSchema = new Schema<TStudentType, StudentModel>(
 // });
 // * creating a custom method
 
-studentSchema.statics.isUserExists = async function (id: string) {
-  const existingUser = await Student.findOne({ id });
+studentSchema.statics.isUserExists = async function (
+  id: string,
+  email: string,
+) {
+  const existingUser = await Student.findOne({
+    $or: [{ id: id }, { email: email }],
+  });
 
   return existingUser;
 };

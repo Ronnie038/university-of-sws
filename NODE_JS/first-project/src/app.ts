@@ -13,7 +13,8 @@ app.use(cors());
 // routes
 app.use('/api/v1', router);
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', async (req: Request, res: Response) => {
+  // Promise.reject();
   res.status(200).send('hello from behind');
 });
 

@@ -4,6 +4,8 @@ import Student from './student.model';
 import { AppError } from '../../errors/AppError';
 import httpStatus from 'http-status';
 import User from '../user/user.model';
+import QueryBuilder from '../../builder/Querybuilder';
+import { studentSearchableField } from './student.constant';
 
 const createStudentIntoDB = async (studentData: TStudentType) => {
   // const student = new Student(studentData); //create an instance
@@ -12,26 +14,97 @@ const createStudentIntoDB = async (studentData: TStudentType) => {
   // }
   // const result = await student.save(); // build in instance method
 
-  if (await Student.isUserExists(studentData.id)) {
-    throw new Error('User already exists');
-  }
+  // if (await Student.isUserExists(studentData.id)) {
+  //   throw new Error('User already exists');
+  // }
   const result = await Student.create(studentData);
 
   return result;
 };
 
-const getAllStudentsFromDB = async () => {
-  const students = await Student.find({})
-    .populate('admissionSemester')
-    .populate({
-      path: 'academicDepartment',
-      populate: {
-        path: 'academicFaculty',
-      },
-    });
-  return students;
+const getAllStudentsFromDB = async (query: Record<string, unknown>) => {
+  // console.log('base query', query);
+  // {email:{$regex: query.searchTerm, $options:i}}
+
+  // const queryObj = { ...query };
+
+  // let searchTerm = '';
+  // if (query.searchTerm) {
+  //   searchTerm = query.searchTerm as string;
+  // }
+
+  // const searchQuery = Student.find({
+  //   $or: studentSearchableField.map(field => ({
+  //     [field]: { $regex: searchTerm, $options: 'i' },
+  //   })),
+  // });
+
+  // // fitlering
+
+  // const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+
+  // excludeFields.forEach(elem => delete queryObj[elem]);
+
+  // const fitlerQuery = searchQuery
+  //   .find(queryObj)
+  //   .populate('admissionSemester')
+  //   .populate({
+  //     path: 'academicDepartment',
+  //     populate: {
+  //       path: 'academicFaculty',
+  //     },
+  //   });
+
+  // let sort = '-createdAt';
+
+  // if (query.sort) {
+  //   sort = query.sort as string;
+  // }
+
+  // const sortQuery = fitlerQuery.sort(sort);
+
+  // let page = 1;
+  // let limit = 0;
+  // let skip = 0;
+
+  // if (query.limit) {
+  //   limit = Number(query.limit);
+  // }
+  // if (query.page) {
+  //   page = Number(query.page);
+  //   skip = (page - 1) * limit;
+  // }
+
+  // const paginateQuery = sortQuery.skip(skip);
+
+  // const limitQuery = paginateQuery.limit(limit);
+
+  // field limiting
+  //   let fields = '-__v';
+
+  //   if (query.fields) {
+  //     fields = (query.fields as string).split(',').join(' ');
+  //     console.log(fields);
+  //   }
+
+  //   const fieldsQuery = await limitQuery.select(fields);
+  //   return fieldsQuery;
+
+  const studentQuery = new QueryBuilder(Student.find(), query)
+    .search(studentSearchableField)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await studentQuery.modelQuery;
+
+  return result;
 };
 
+//
+//
+//
 const getStudentFromDb = async (id: string) => {
   // const result = await Student.findOne({ id });
   // const result = await Student.aggregate([{ $match: { id: id } }]);
@@ -46,11 +119,15 @@ const getStudentFromDb = async (id: string) => {
 
   return result;
 };
+
+//
+//
+//
 const deleteStudentFromDb = async (id: string) => {
   const session = await mongoose.startSession();
 
   // checking student exist or not
-  if (!(await Student.isUserExists(id))) {
+  if (!(await Student.isUserExists(id, ''))) {
     throw new AppError(httpStatus.NOT_FOUND, 'Student does not exist');
   }
 

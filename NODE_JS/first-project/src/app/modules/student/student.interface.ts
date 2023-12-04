@@ -46,7 +46,7 @@ export interface TStudentType {
 // * for creating static method
 export interface StudentModel extends Model<TStudentType> {
   // eslint-disable-next-line no-unused-vars
-  isUserExists(id: string): Promise<TStudentType | null>;
+  isUserExists(id: string, email: string): Promise<TStudentType | null>;
 }
 
 // * for creating instance method
