@@ -7,7 +7,7 @@ import { TFaculty } from './faculty.interface';
 import { Faculty } from './faculty.model';
 import QueryBuilder from '../../builder/Querybuilder';
 import { AppError } from '../../errors/AppError';
-import User from '../user/user.model';
+import { User } from '../user/user.model';
 
 const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
   const facultyQuery = new QueryBuilder(

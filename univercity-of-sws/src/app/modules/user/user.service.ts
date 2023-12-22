@@ -19,7 +19,7 @@ import AcademicDepartment from '../academicDepartment/academicDepartment.model';
 import { TStudentType } from '../student/student.interface';
 import { AcademicSemester } from '../academicSemister/academicSemester.model';
 import { AppError } from '../../errors/AppError';
-import User from './user.model';
+import { User } from './user.model';
 import Student from '../student/student.model';
 
 const createStudentIntoDB = async (password: string, payload: TStudentType) => {

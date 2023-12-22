@@ -1,8 +1,9 @@
-import { Schema, model } from 'mongoose';
-import { TUser } from './user.interface';
-import config from '../../config';
+/* eslint-disable @typescript-eslint/no-this-alias */
 import bcrypt from 'bcrypt';
-const userSchema = new Schema<TUser>(
+import { Schema, model } from 'mongoose';
+import config from '../../config';
+import { TUser, UserModel } from './user.interface';
+const userSchema = new Schema<TUser, UserModel>(
   {
     id: {
       type: String,
@@ -12,14 +13,18 @@ const userSchema = new Schema<TUser>(
     password: {
       type: String,
       required: true,
+      select: 0,
     },
     needsPasswordChange: {
       type: Boolean,
       default: true,
     },
+    passwordChangedAt: {
+      type: Date,
+    },
     role: {
       type: String,
-      enum: ['admin', 'faculty', 'student'],
+      enum: ['student', 'faculty', 'admin'],
     },
     status: {
       type: String,
@@ -31,30 +36,48 @@ const userSchema = new Schema<TUser>(
       default: false,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-// * pre save meddleware/ hook : will work on careate() or save()
-
 userSchema.pre('save', async function (next) {
-  const password = this.password;
-  const saltRounds = Number(config.bcrypt_salt_rounds);
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  const user = this; // doc
+  // hashing password and save into DB
 
-  const salt = await bcrypt.genSalt(saltRounds);
-
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  this.password = hashedPassword;
-  next();
-});
-
-// set empty string
-userSchema.post('save', function (data, next) {
-  data.password = '';
+  user.password = await bcrypt.hash(
+    user.password,
+    Number(config.bcrypt_salt_rounds),
+  );
 
   next();
 });
 
-const User = model<TUser>('User', userSchema);
+// set '' after saving password
+userSchema.post('save', function (doc, next) {
+  doc.password = '';
+  next();
+});
 
-export default User;
+userSchema.statics.isUserExistsByCustomId = async function (id: string) {
+  return await User.findOne({ id }).select('+password');
+};
+
+userSchema.statics.isPasswordMatched = async function (
+  plainTextPassword,
+  hashedPassword,
+) {
+  return await bcrypt.compare(plainTextPassword, hashedPassword);
+};
+
+userSchema.statics.isJWTIssuedBeforePasswordChanged = function (
+  passwordChangedTimestamp: Date,
+  jwtIssuedTimestamp: number,
+) {
+  const passwordChangedTime =
+    new Date(passwordChangedTimestamp).getTime() / 1000;
+  return passwordChangedTime > jwtIssuedTimestamp;
+};
+
+export const User = model<TUser, UserModel>('User', userSchema);

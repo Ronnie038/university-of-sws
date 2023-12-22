@@ -1,5 +1,5 @@
 import { TAcademicSemester } from '../academicSemister/academicSemester.interface';
-import User from './user.model';
+import { User } from './user.model';
 
 const findLastStudentId = async () => {
   const lastStudent = await User.findOne(

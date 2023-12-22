@@ -3,9 +3,10 @@ import { TStudentType } from './student.interface';
 import Student from './student.model';
 import { AppError } from '../../errors/AppError';
 import httpStatus from 'http-status';
-import User from '../user/user.model';
+
 import QueryBuilder from '../../builder/Querybuilder';
 import { studentSearchableField } from './student.constant';
+import { User } from '../user/user.model';
 
 const createStudentIntoDB = async (studentData: TStudentType) => {
   // const student = new Student(studentData); //create an instance
